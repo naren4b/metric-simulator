@@ -1,15 +1,13 @@
-FROM golang:1.7.3 AS builder
-WORKDIR /src
+FROM golang:1.15-alpine as dev
 
-RUN go get ./...
+WORKDIR /work
 
-COPY . .
+FROM golang:1.15-alpine as build
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o .
+WORKDIR /app
+COPY ./app/* /app/
+RUN go build -o app
 
-
-FROM alpine:latest  
-RUN apk --no-cache add ca-certificates
-WORKDIR /root/
-COPY --from=builder . .
-CMD ["./metric-app"] 
+FROM alpine as runtime 
+COPY --from=build /app/app /
+CMD ./app
