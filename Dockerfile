@@ -1,13 +1,22 @@
-FROM golang:1.15-alpine as dev
+FROM golang:1.16-alpine as build
+WORKDIR /src
 
-WORKDIR /work
+COPY . .
 
-FROM golang:1.15-alpine as build
 
-WORKDIR /app
-COPY ./app/* /app/
-RUN go build -o app
+#RUN go mod init github.com/naren4b/metric-simulator
 
-FROM alpine as runtime 
-COPY --from=build /app/app /
-CMD ./app
+RUN go build -o releases/metric-simulator
+
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+
+RUN addgroup -g 1001 appgroup && \
+  adduser -H -D -s /bin/false -G appgroup -u 1001 appuser
+
+USER 1001:1001  
+
+COPY --from=build /src/releases/metric-simulator /bin/metric-simulator
+
+ENTRYPOINT [ "/bin/metric-simulator" ]

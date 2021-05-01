@@ -1,35 +1,37 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 var (
-	ACCOUNT_ID                    string
-	NUMBER_OF_METRICS             int
-	NEW_METRIC_VALUE_FREQ_SECONDS int32
+	mc                = kingpin.Flag("mc", "Number of metric family").Default("1").Int()
+	ac                = kingpin.Flag("ac", "account id string").Default("en-100").String()
+	ACCOUNT_ID        string
+	NUMBER_OF_METRICS int
 )
 
 const PORT = ":8080"
+const NEW_METRIC_VALUE_FREQ_SECONDS = 2
 
 func main() {
-	ACCOUNT_ID = os.Getenv("ACC_ID")
-	NEW_METRIC_VALUE_FREQ_SECONDS = 2
-	NUMBER_OF_METRICS = getNumberOfMetrics()
+	kingpin.HelpFlag.Short('h')
+	kingpin.Parse()
+	ACCOUNT_ID = *ac
+	NUMBER_OF_METRICS = *mc
 	printEnv()
 	pumpMetrics()
 	http.Handle("/metrics", promhttp.Handler())
-	http.Handle("/", http.FileServer(http.Dir("public")))
+	http.Handle("/", http.FileServer(http.Dir("./public")))
 	log.Printf("Server is Starting at %v", PORT)
 	log.Fatal(http.ListenAndServe(PORT, nil))
 
@@ -41,18 +43,6 @@ func printEnv() {
 	log.Printf("NUMBER OF GAUGE METRICS : %v ", NUMBER_OF_METRICS)
 	log.Printf("NEW_METRIC_VALUE_FREQ_SECONDS : %v ", NEW_METRIC_VALUE_FREQ_SECONDS)
 	log.Println()
-
-}
-
-func getNumberOfMetrics() int {
-	if s, err := strconv.Atoi(os.Args[1]); err == nil {
-		fmt.Printf("Number of Metrics:  %T, %v", s, s)
-		return s
-	} else {
-		fmt.Printf("Number of Metrics:  %T, %v", s, s)
-	}
-
-	return 0
 
 }
 
