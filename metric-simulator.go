@@ -31,7 +31,7 @@ func main() {
 	printEnv()
 	pumpMetrics()
 	http.Handle("/metrics", promhttp.Handler())
-	http.Handle("/", http.FileServer(http.Dir("./public")))
+	http.Handle("/", http.FileServer(http.Dir("/var/lib/public")))
 	log.Printf("Server is Starting at %v", PORT)
 	log.Fatal(http.ListenAndServe(PORT, nil))
 
